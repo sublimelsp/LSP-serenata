@@ -11,7 +11,7 @@ import json
 from LSP.plugin.core.handlers import LanguageHandler
 from LSP.plugin.core.settings import ClientConfig, LanguageConfig, read_client_config
 
-package_path = os.path.dirname(__file__)
+package_path = os.path.join(sublime.cache_path(), 'LSP-serenata')
 server_path = os.path.join(package_path, 'serenata.phar')
 serenata_upload_hash = '3edf39e6ef397f983d1b10943280990b'
 
@@ -56,6 +56,9 @@ def install_server(callback):
             url = 'https://gitlab.com/Serenata/Serenata/uploads/{}/distribution-7.1.phar'.format(serenata_upload_hash)
             r = requests.get(url)
             r.raise_for_status()
+
+            if os.path.exists(package_path) == False:
+                os.makedirs(package_path, 0o700)
 
             with open(server_path, 'wb') as f:
                 f.write(r.content)
