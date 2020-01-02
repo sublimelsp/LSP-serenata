@@ -11,8 +11,9 @@ import json
 from LSP.plugin.core.handlers import LanguageHandler
 from LSP.plugin.core.settings import ClientConfig, LanguageConfig, read_client_config
 
-package_path = os.path.join(sublime.cache_path(), 'LSP-serenata')
-server_path = os.path.join(package_path, 'serenata.phar')
+package_path = None
+server_path = None
+
 serenata_upload_hash = '3edf39e6ef397f983d1b10943280990b'
 
 
@@ -41,6 +42,9 @@ def lsp_expand_variables(window, var):
 
 
 def plugin_loaded():
+    package_path = os.path.join(sublime.cache_path(), 'LSP-serenata')
+    server_path = os.path.join(package_path, 'serenata.phar')
+
     is_server_installed = os.path.isfile(server_path)
     print('LSP-serenata: Server {} installed.'.format('is' if is_server_installed else 'is not' ))
 
@@ -122,6 +126,9 @@ class LspSerenataPlugin(LanguageHandler):
 
     @property
     def config(self) -> ClientConfig:
+        package_path = os.path.join(sublime.cache_path(), 'LSP-serenata')
+        server_path = os.path.join(package_path, 'serenata.phar')
+
         settings = sublime.load_settings("LSP-serenata.sublime-settings")
         client_configuration = settings.get('client')
         client_settings = client_configuration['settings']
