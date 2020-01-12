@@ -1,20 +1,16 @@
 import shutil
 import os
-import sublime
 import tempfile
 import threading
-import subprocess
-import requests
 import random
 import json
+import requests
+import sublime
 
 from LSP.plugin.core.handlers import LanguageHandler
-from LSP.plugin.core.settings import ClientConfig, LanguageConfig, read_client_config
+from LSP.plugin.core.settings import ClientConfig, read_client_config
 
-package_path = None
-server_path = None
-
-serenata_upload_hash = '3edf39e6ef397f983d1b10943280990b'
+SERENATA_UPLOAD_HASH = '7499ecf1275983f26efd930446a3693d'
 
 
 def get_expanding_variables(window):
@@ -42,39 +38,38 @@ def lsp_expand_variables(window, var):
 
 
 def plugin_loaded():
-    package_path = os.path.join(sublime.cache_path(), 'LSP-serenata')
-    server_path = os.path.join(package_path, 'serenata.phar')
+    server_path = os.path.join(sublime.cache_path(), 'LSP-serenata', 'serenata.phar')
 
     is_server_installed = os.path.isfile(server_path)
-    print('LSP-serenata: Server {} installed.'.format('is' if is_server_installed else 'is not' ))
+    print('LSP-serenata: Server {} installed at {}.'.format('is' if is_server_installed else 'is not', server_path))
 
     if not is_server_installed:
         log_and_show_message('LSP-serenata: Installing server.')
-        install_server(on_install_complete)
+        install_server(server_path, on_install_complete)
 
 
-def install_server(callback):
-    def download_server(callback):
+def install_server(server_path, callback):
+    def download_server(server_path, callback):
         try:
             # Download serenata phar compatible with PHP 7.1+
-            url = 'https://gitlab.com/Serenata/Serenata/uploads/{}/distribution-7.1.phar'.format(serenata_upload_hash)
-            r = requests.get(url)
-            r.raise_for_status()
+            url = 'https://gitlab.com/Serenata/Serenata/uploads/{}/distribution-7.1.phar'.format(SERENATA_UPLOAD_HASH)
+            response = requests.get(url)
+            response.raise_for_status()
 
-            if os.path.exists(package_path) == False:
-                os.makedirs(package_path, 0o700)
+            if not os.path.exists(os.path.dirname(server_path)):
+                os.makedirs(os.path.dirname(server_path), 0o700)
 
-            with open(server_path, 'wb') as f:
-                f.write(r.content)
-            
+            with open(server_path, 'wb') as file:
+                file.write(response.content)
+
             callback()
         except requests.exceptions.RequestException as error:
             log_and_show_message('LSP-serenata: Error while installing the server.', error)
         return
-    
-    thread = threading.Thread(target=download_server, args=(callback,))
+
+    thread = threading.Thread(target=download_server, args=(server_path, callback,))
     thread.start()
-    
+
     return thread
 
 
@@ -85,7 +80,7 @@ def on_install_complete():
 def is_php_installed(plugin) -> bool:
     php_path = plugin.config.settings['phpPath'] or 'php'
 
-    found = shutil.which(php_path) or os.path.isFile(php_path)
+    found = shutil.which(php_path) or os.path.isfile(php_path)
 
     return found
 
@@ -95,7 +90,7 @@ def log_and_show_message(msg, additional_logs=None):
 
     if additional_logs:
         print(additional_logs)
-        
+
     sublime.active_window().status_message(msg)
 
 
@@ -126,17 +121,19 @@ class LspSerenataPlugin(LanguageHandler):
 
     @property
     def config(self) -> ClientConfig:
-        package_path = os.path.join(sublime.cache_path(), 'LSP-serenata')
-        server_path = os.path.join(package_path, 'serenata.phar')
-
         settings = sublime.load_settings("LSP-serenata.sublime-settings")
         client_configuration = settings.get('client')
         client_settings = client_configuration['settings']
 
         tcp_port = random.randrange(10000, 40000)
 
+        server_path = os.path.join(sublime.cache_path(), 'LSP-serenata', 'serenata.phar')
+
         if 'phpPath' in client_settings:
-            client_settings['phpPath'] = lsp_expand_variables(sublime.active_window(), client_settings['phpPath'])
+            client_settings['phpPath'] = lsp_expand_variables(
+                sublime.active_window(),
+                client_settings['phpPath']
+            )
 
         default_configuration = {
             "enabled": True,
@@ -164,13 +161,15 @@ class LspSerenataPlugin(LanguageHandler):
         }
 
         default_configuration.update(client_configuration)
-            
+
         return read_client_config('lsp-serenata', default_configuration)
 
 
     def on_start(self, window) -> bool:
         if not is_php_installed(self):
-            sublime.status_message('Please install PHP 7.1 or later for the PHP Language Server to work.')
+            sublime.status_message(
+                'Please install PHP 7.1 or later for the PHP Language Server to work.'
+            )
             return False
         return True
 
