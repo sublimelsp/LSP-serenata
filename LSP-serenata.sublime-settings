@@ -1,16 +1,16 @@
 {
-	"client" : {
-		"enabled": true,
-		"languages": [
-			{
-				"languageId": "php",
-				"scopes": ["source.php"],
-				"syntaxes": ["Packages/PHP/PHP.sublime-syntax"]
-			}
-		],
-		"settings": {
-			"phpPath": "php",
-			"memoryLimit": "1024M"
-		}
-	}
+  "client" : {
+    "enabled": true,
+    "languages": [
+      {
+        "languageId": "php",
+        "scopes": ["source.php"],
+        "syntaxes": ["Packages/PHP/PHP.sublime-syntax"]
+      }
+    ],
+    "settings": {
+      "phpPath": "php",
+      "memoryLimit": "1024M"
+    }
+  }
 }
