@@ -14,7 +14,7 @@ from LSP.plugin.core.settings import ClientConfig, LanguageConfig, read_client_c
 package_path = None
 server_path = None
 
-serenata_upload_hash = '3edf39e6ef397f983d1b10943280990b'
+serenata_upload_hash = '7499ecf1275983f26efd930446a3693d'
 
 
 def get_expanding_variables(window):
