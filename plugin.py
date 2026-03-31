@@ -151,7 +151,7 @@ class LspSerenataPlugin(LanguageHandler):
                     "syntaxes": ["Packages/PHP/PHP.sublime-syntax"]
                 }
             ],
-            "initializationOptions": get_initialization_options(),
+            "initialization_options": get_initialization_options(),
             "tcp_host": '127.0.0.1',
             "tcp_port": tcp_port,
             "settings": {
